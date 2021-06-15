@@ -1,0 +1,193 @@
+<template>
+    <div class="page">
+        <div class="navbar">
+            <div class="navbar-bg"></div>
+            <div class="navbar-inner sliding">
+                <div class="left">
+                    <a class="link back">
+                        <i class="icon f7-icons">arrow_left</i>
+                    </a>
+                </div>
+                <div class="title">Transaksi Terakhir</div>
+            </div>
+        </div>
+
+        <div class="page-content hide-navbar-on-scroll ptr-content" id="page-pesanan">
+            <div class="ptr-preloader">
+                <div class="preloader"></div>
+                <div class="ptr-arrow"></div>
+            </div>
+            {{#if loading}}
+            <div class="block-title block-title-medium skeleton-text skeleton-effect-blink">
+                --------- ----------
+            </div>
+            <div class="list accordion-list no-hairlines">
+                <ul>
+                    {{#each '123'}}
+                    <li
+                        class="accordion-item card card-transaksi no-hairline-bottom skeleton-text skeleton-effect-blink">
+                        <a href="#" class="item-link item-content">
+                            <div class="item-inner">
+                                <div class="item-title">
+                                    <div class="item-header">-----------------------------</div>
+                                    <div class="item-footer"><b>---------------------------</b></div>
+                                </div>
+                                <div class="item-after"><b>-------------------</b></div>
+                            </div>
+                        </a>
+                    </li>
+                    {{/each}}
+                </ul>
+            </div>
+            {{else}}
+            <div class="block block-title block-title-medium">
+                Total : {{daftarTransaksi.length}} Transaksi
+            </div>
+            <div class="list accordion-list no-hairlines">
+                <ul>
+                    {{#each daftarTransaksi}}
+                    <li class="accordion-item card card-transaksi no-hairline-bottom">
+                        <a href="#" class="item-link item-content">
+                            <div class="item-inner">
+                                <div class="item-title">
+                                    <div class="item-header">
+                                        {{waktuFormatter ditambahkan_pada}}</div>
+                                    <div class="item-footer"><b>{{status}}</b></div>
+                                </div>
+                                <div class="item-after"><b>{{formatRupiahHelper totalTransfer}}</b></div>
+                            </div>
+                        </a>
+                        <div class="accordion-item-content">
+                            <div class="block">
+                                <div class="list no-hairlines">
+                                    <ul>
+                                        <li class="item-content">
+                                            <div class="item-inner item-cell">
+                                                <div class="item-row">
+                                                    <div class="item-cell"><b>ID Pemesanan</b></div>
+                                                </div>
+                                                <div class="item-row">
+                                                    <div class="item-cell">{{id}}</div>
+                                                </div>
+                                            </div>
+                                        </li>
+                                        <li class="item-content">
+                                            <div class="item-inner item-cell">
+                                                <div class="item-row">
+                                                    <div class="item-cell"><b>Tanggal Reservasi</b>
+                                                    </div>
+                                                </div>
+                                                <div class="item-row">
+                                                    <div class="item-cell">{{tanggal}} {{jam}}</div>
+                                                </div>
+                                            </div>
+                                        </li>
+                                        <li class="item-content">
+                                            <div class="item-inner item-cell">
+                                                <div class="item-row">
+                                                    <div class="item-cell"><b>Durasi</b></div>
+                                                </div>
+                                                <div class="item-row">
+                                                    <div class="item-cell">{{durasiFormatter durasi}}</div>
+                                                </div>
+                                            </div>
+                                        </li>
+                                        <li class="item-content">
+                                            <div class="item-inner item-cell">
+                                                <div class="item-row">
+                                                    <div class="item-cell"><b>Daftar Meja</b></div>
+                                                </div>
+                                                <div class="item-row">
+                                                    <div class="item-cell">
+                                                        {{daftarMejaFormatter daftarMeja}}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </li>
+                                        <li class="item-content">
+                                            <div class="item-inner item-cell">
+                                                <div class="item-row">
+                                                    <div class="item-cell"><b>Total Pembayaran</b></div>
+                                                </div>
+                                                <div class="item-row">
+                                                    <div class="item-cell">
+                                                        {{formatRupiahHelper totalHarga}}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </li>
+                    {{/each}}
+                </ul>
+            </div>
+            {{/if}}
+        </div>
+
+    </div>
+</template>
+<style>
+    .card-transaksi {
+        /* box-shadow: 0 8px 12px 0 rgba(0, 0, 0, 0.2); */
+        background: rgb(246, 96, 21);
+        background: linear-gradient(0deg, rgba(246, 96, 21, 1) 0%, rgba(252, 141, 36, 1) 100%);
+        color: white;
+    }
+
+    /* .card-transaksi:hover {
+        box-shadow: 0 12px 16px 0 rgba(0, 0, 0, 0.2);
+    } */
+
+
+    .card-transaksi .item-footer,
+    .card-transaksi .item-after {
+        color: white;
+    }
+</style>
+<script>
+    // script must return component object
+    return {
+        data: function () {
+            return {
+                loading: true
+            }
+        },
+        on: {
+            pageInit: function () {
+                let self = this;
+
+                this.getDaftarTransaksi();
+
+                $$('#page-pesanan').on('ptr:refresh', () => {
+                    this.getDaftarTransaksi();
+                })
+            }
+        },
+        methods: {
+            getDaftarTransaksi: function () {
+                const self = this;
+
+                const send = {
+                    uid: localStorage.getItem('uid')
+                };
+
+                app.request.promise.get(`${URL}getDaftarTransaksi`, send, 'json')
+                    .then(res => {
+                        const daftarTransaksi = res.data;
+
+                        self.$setState({
+                            loading: false,
+                            daftarTransaksi
+                        })
+
+                        app.ptr.done();
+                    })
+
+                app.emit('getTotalPesanan');
+            }
+        }
+    }
+</script>

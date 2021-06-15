@@ -1,0 +1,428 @@
+<template>
+    <div class="page" id="customerPage">
+        <div class="navbar no-shadow">
+            <div class="navbar-bg"></div>
+            <div class="navbar-inner">
+                <div class="left">
+                    <a class="link" href="/profil/">
+                        <img data-src="{{foto}}" id="fotoProfil" class="lazy lazy-fade-in" width="35px" height="35px"
+                            style="border-radius: 50%;">
+                    </a>
+                </div>
+                <div class="title">Ruang Seduh Coffee</div>
+                <div class="right">
+                    <a class="link" href="/pesanan/">
+                        <i class="icon f7-icons">cart
+                            {{#if totalPesanan}}
+                            <span class="badge color-yellow">{{totalPesanan}}</span>
+                            {{/if}}
+                        </i>
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="page-content tab tab-active">
+            <div class="demo-card-header-pic">
+                <div class="card-header align-items-flex-end">
+                    Selamat Datang di Sistem Reservasi Ruang Seduh Coffee
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header"><b>Reservasi</b></div>
+                <div class="card-content">
+                    <div class="list no-hairlines-md">
+                        <ul>
+                            <li>
+                                <div class="item-content item-input">
+                                    <div class="item-inner">
+                                        <div class="item-input-wrap">
+                                            <input type="text" placeholder="Pilih Tanggal" readonly="readonly"
+                                                id="tanggal" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </li>
+                            <li>
+                                <div class="item-content item-input">
+                                    <div class="item-inner">
+                                        <div class="item-input-wrap">
+                                            <input type="text" placeholder="Pilih Jam" readonly="readonly" id="jam" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </li>
+                            <li>
+                                <div class="item-content item-input">
+                                    <div class="item-inner">
+                                        <div class="item-input-wrap">
+                                            <input type="text" placeholder="Pilih Durasi" readonly="readonly"
+                                                id="durasi" />
+                                        </div>
+                                        <!-- <div class="text-color-gray" style="font-size: 14px;">Durasi (Jam)</div>
+                                        <div class="item-input-wrap">
+                                            <div id="durasi" class="range-slider range-slider-init" data-min="0"
+                                                data-max="15" data-label="true" data-step="0.5" data-value="1"
+                                                data-scale="true" data-scale-steps="5" data-scale-sub-steps="6"></div>
+                                        </div> -->
+                                    </div>
+                                </div>
+                            </li>
+                            <li>
+                                <div class="item-content">
+                                    <div class="item-inner">
+                                        <div class="item-input-wrap">
+                                            <a class="button button-fill button-round button-raised color-deeporange
+                                                        display-flex" @click="periksa">
+                                                <i class="icon f7-icons">search</i> Periksa</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="block">
+                <div class="row">
+                    <b style="font-size: 18px;">Jadwal Buka</b>
+                    <a href="#" class="color-deeporange display-flex justify-content-center popup-open"
+                        data-popup=".popup-jadwal">Lihat
+                        Detail <i class="icon f7-icons" style="font-size: 18px;">arrow_right</i></a>
+                </div>
+            </div>
+
+            <div class="block">
+                <div class="row">
+                    <b style="font-size: 18px;">Transaksi Terakhir</b>
+                    <a href="/transaksi/" class="color-deeporange display-flex justify-content-center">Lihat
+                        Detail <i class="icon f7-icons" style="font-size: 18px;">arrow_right</i></a>
+                </div>
+            </div>
+        </div>
+        <div class="popup popup-jadwal" style="background-color:rgb(252, 141, 36);">
+            <div class="block">
+                <div class="card elevation-10">
+                    <div class="card-header display-flex justify-content-center">
+                        <div class="block-title block-title-large">
+                            Jadwal Buka
+                        </div>
+                    </div>
+                    <div class="card-content card-content-padding">
+                        <div class="list no-hairlines-md">
+                            <ul>
+                                {{#each jadwalBuka}}
+                                <li>
+                                    <div class="item-content">
+                                        <div class="item-inner item-cell">
+                                            <div class="item-row">
+                                                <div class="item-cell">
+                                                    <b>
+                                                        {{this.hari}}
+                                                    </b>
+                                                    :
+                                                </div>
+                                                <div class="item-cell">
+                                                    <div class="chip color-deeporange">
+                                                        <div class="chip-label">
+                                                            {{this.jam}}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </li>
+                                {{/each}}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="position:absolute;bottom:0px;width:100%;">
+                <div class="block">
+                    <a class="button button-fill button-round button-raised color-white text-color-deeporange
+                                                        display-flex popup-close">
+                        <i class="icon f7-icons" style="font-size: 18px;">arrow_left</i> Kembali</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- <div class="fab fab-extended fab-left-bottom color-white">
+            <a href="#">
+                <img src="./assets/whatsapp.svg" width="35px">
+            </a>
+        </div> -->
+
+    </div>
+</template>
+<style>
+    .demo-card-header-pic .card-header {
+        height: 60vw;
+        background-size: cover;
+        background-position: center;
+        color: white;
+        background-image: url('./assets/dashboard.jpg');
+        font-family: 'DancingScript';
+        font-size: 32px;
+        font-weight: bold;
+        text-shadow: 2px 2px 8px #000;
+    }
+</style>
+<script>
+    // script must return component object
+    return {
+        data: function () {
+            const jadwalBuka = [{
+                hari: 'Senin',
+                jam: '08.00–23.00'
+            }, {
+                hari: 'Selasa',
+                jam: '08.00–23.00'
+            }, {
+                hari: 'Rabu',
+                jam: '08.00–23.00'
+            }, {
+                hari: 'Kamis',
+                jam: '08.00–23.00'
+            }, {
+                hari: 'Jumat',
+                jam: '08.00–23.00'
+            }, {
+                hari: 'Sabtu',
+                jam: '08.00–23.00'
+            }, {
+                hari: 'Minggu',
+                jam: '08.00–23.00'
+            }, ]
+
+            const data = {
+                jadwalBuka
+            };
+            return data;
+        },
+        on: {
+            pageInit: function () {
+                const self = this;
+
+                app.calendar.create({
+                    inputEl: '#tanggal',
+                    openIn: 'customModal',
+                    toolbarCloseText: 'Pilih',
+                    footer: true,
+                    backdrop: true,
+                    closeByBackdropClick: false,
+                    dateFormat: 'yyyy-mm-dd',
+                    minDate: moment(new Date()).add(-1, 'days'),
+                    maxDate: moment(new Date()).add(1, 'days'),
+                    on: {
+                        open: function () {
+                            this.setValue([new Date()])
+                        }
+                    }
+                });
+
+                this.pickerJam = app.picker.create({
+                    inputEl: '#jam',
+                    openIn: 'auto',
+                    toolbar: true,
+                    toolbarCloseText: 'Pilih',
+                    backdrop: true,
+                    closeByOutsideClick: false,
+                    rotateEffect: true,
+                    formatValue: function (values, displayValues) {
+                        return `${values[0]}:${values[1]}`
+                    },
+                    cols: [
+                        // Space divider
+                        {
+                            divider: true,
+                            content: '&nbsp;&nbsp;'
+                        },
+                        // Hours
+                        {
+                            values: (function () {
+                                var arr = [];
+                                for (var i = 8; i <= 21; i++) {
+                                    arr.push(i);
+                                }
+                                return arr;
+                            })(),
+                        },
+                        // Divider
+                        {
+                            divider: true,
+                            content: ':'
+                        },
+                        // Minutes
+                        {
+                            values: (function () {
+                                var arr = [];
+                                // arr.push('00');
+                                // arr.push('30');
+                                for (var i = 0; i <= 59; i++) {
+                                    arr.push(i < 10 ? `0${i}` : i);
+                                }
+                                return arr;
+                            })(),
+                        }
+                    ]
+                });
+
+                this.pickerDurasi = app.picker.create({
+                    inputEl: '#durasi',
+                    openIn: 'auto',
+                    toolbar: true,
+                    toolbarCloseText: 'Pilih',
+                    backdrop: true,
+                    closeByOutsideClick: false,
+                    rotateEffect: true,
+                    formatValue: function (values, displayValues) {
+                        return `${values[0]} jam ${values[1] > 0 ? values[1] + ` menit` : ''}`
+                    },
+                    cols: [
+                        // Space divider
+                        {
+                            divider: true,
+                            content: '&nbsp;&nbsp;'
+                        },
+                        // Hours
+                        {
+                            values: (function () {
+                                var arr = [];
+                                for (var i = 1; i <= 15; i++) {
+                                    arr.push(i);
+                                }
+                                return arr;
+                            })(),
+                        },
+                        // Divider
+                        {
+                            divider: true,
+                            content: 'jam'
+                        },
+                        // Minutes
+                        {
+                            values: (function () {
+                                var arr = [];
+                                for (var i = 0; i <= 59; i++) {
+                                    arr.push(i);
+                                }
+                                return arr;
+                            })(),
+                        },
+                        {
+                            divider: true,
+                            content: 'menit'
+                        }
+                    ]
+                });
+
+                $$('.popup-jadwal')
+                    .on('popup:opened', () => {
+                        app.statusbar.setBackgroundColor('#fc8d24')
+                    })
+                    .on('popup:close', () => {
+                        app.statusbar.setBackgroundColor('#fa702a')
+                    })
+
+                this.getProfil();
+                this.getTotalPesanan();
+
+                this.$app.on('refreshPage', this.refreshPage);
+                this.$app.on('getTotalPesanan', this.getTotalPesanan);
+            },
+            pageBeforeRemove: function () {
+                this.$app.off('refreshPage', this.refreshPage);
+                this.$app.off('getTotalPesanan', this.getTotalPesanan);
+            }
+        },
+        methods: {
+            getProfil: function () {
+                FirebasePlugin.getCurrentUser(user => {
+                    this.$setState({
+                        foto: user.photoUrl
+                    }, () => app.lazy.loadImage('#fotoProfil'))
+                }, function (error) {
+                    console.error("Failed to get current user data: " + error);
+                });
+            },
+            refreshPage: function () {
+                $$('#tanggal').val('');
+                $$('#jam').val('');
+                $$('#durasi').val('');
+            },
+            getTotalPesanan: function () {
+                const self = this;
+
+                const send = {
+                    uid: localStorage.getItem('uid')
+                }
+
+                app.request.promise.get(`${URL}getTotalPesanan`, send, 'json')
+                    .then(res => {
+                        const totalPesanan = res.data > 0 ? res.data : null;
+                        self.$setState({
+                            totalPesanan
+                        })
+                    })
+                    .catch(err => {
+                        app.dialog.preloader('Tidak dapat terhubung ke server...');
+                        console.log(err);
+                    })
+            },
+            time_convert: function (num) {
+                const hours = Math.floor(num / 60);
+                const minutes = num % 60;
+                return `${hours} jam ${minutes > 0 ? minutes + ` menit` : ''}`
+            },
+            periksa: function () {
+                const tanggal = $$('#tanggal').val();
+                const jam = $$('#jam').val();
+                const durasi = $$('#durasi').val();
+
+                if (!tanggal || !jam || !durasi) {
+                    app.toast.create({
+                        icon: '<i class="icon f7-icons" style="font-size:22px;">exclamationmark_circle</i>',
+                        text: 'Silahkan lengkapi data reservasi terlebih dahulu',
+                        position: 'center',
+                        closeTimeout: 2000,
+                    }).open()
+
+                    return
+                }
+
+                const pickerJam = this.pickerJam.getValue();
+                const pickerDurasi = this.pickerDurasi.getValue();
+                const durasiMenit = (parseInt(pickerDurasi[0]) * 60) + parseInt(pickerDurasi[1]);
+
+                const jamMulai = moment(`${pickerJam[0]}:${pickerJam[1]}}`, 'HH:mm')
+                const jamTutup = moment('23:00', 'HH:mm')
+                const maxDurasi = jamTutup.diff(jamMulai, 'm')
+
+                const jamSelesai = jamMulai.add(durasiMenit, 'm')
+
+                if (jamSelesai.diff(jamTutup, 'm') > 0) {
+                    app.toast.create({
+                        icon: '<i class="icon f7-icons" style="font-size:22px;">exclamationmark_circle</i>',
+                        text: `Durasi tidak valid, jam tutup 23.00 (Max ${this.time_convert(maxDurasi)})`,
+                        position: 'center',
+                        closeTimeout: 2000,
+                    }).open()
+                } else {
+                    app.preloader.show();
+
+                    mainView.router.navigate({
+                        name: 'reservasi',
+                        params: {
+                            tanggal,
+                            jam,
+                            durasi: durasiMenit,
+                        }
+                    });
+                }
+            }
+        }
+    }
+</script>

@@ -1,0 +1,305 @@
+<template>
+    <div class="page">
+        <div class="navbar">
+            <div class="navbar-bg"></div>
+            <div class="navbar-inner sliding">
+                <div class="left">
+                    <a class="link back">
+                        <i class="icon f7-icons">arrow_left</i>
+                    </a>
+                </div>
+                <div class="title">Daftar Pesanan</div>
+            </div>
+        </div>
+
+        <div class="page-content ptr-content" id="page-pesanan">
+            <div class="ptr-preloader">
+                <div class="preloader"></div>
+                <div class="ptr-arrow"></div>
+            </div>
+            {{#if loading}}
+            <div class="block-title block-title-medium skeleton-text skeleton-effect-blink">
+                ---------------------
+            </div>
+            <div class="list no-hairlines">
+                <ul>
+                    {{#each '123'}}
+                    <li class="card card-pesanan no-hairline-bottom skeleton-text skeleton-effect-blink">
+                        <a href="#" class="item-link item-content">
+                            <div class="item-inner">
+                                <div class="item-title">
+                                    <div class="item-header">-----------------------------</div>
+                                    <div class="item-footer"><b>---------------------------</b></div>
+                                </div>
+                                <div class="item-after"><b>-------------------</b></div>
+                            </div>
+                        </a>
+                    </li>
+                    {{/each}}
+                </ul>
+            </div>
+            {{else}}
+            <div class="block-title block-title-medium">
+                Total : {{daftarPesanan.length}} Pesanan
+            </div>
+            <div class="list no-hairlines">
+                <ul class="accordion-list no-hairlines">
+                    {{#each daftarPesanan}}
+                    <li class="accordion-item card card-pesanan no-hairlines" data-id="{{id}}" data-status="{{status}}">
+                        <a href="#" class="item-link item-content">
+                            <div class="item-inner">
+                                <div class="item-title">
+                                    <div class="item-header">
+                                        {{waktuFormatter ditambahkan_pada}}</div>
+                                    <div class="item-footer"><b>{{status}}</b></div>
+                                </div>
+                                <div class="item-after"><b>{{formatRupiahHelper totalTransfer}}</b></div>
+                            </div>
+                        </a>
+                        <div class="accordion-item-content no-hairlines">
+                            <div class="block">
+                                <div class="list no-hairlines">
+                                    <ul>
+                                        <li class="item-content">
+                                            <div class="item-inner item-cell">
+                                                <div class="item-row">
+                                                    <div class="item-cell"><b>ID Pemesanan</b></div>
+                                                </div>
+                                                <div class="item-row">
+                                                    <div class="item-cell">{{id}}</div>
+                                                </div>
+                                            </div>
+                                        </li>
+                                        <li class="item-content">
+                                            <div class="item-inner item-cell">
+                                                <div class="item-row">
+                                                    <div class="item-cell"><b>Tanggal Reservasi</b>
+                                                    </div>
+                                                </div>
+                                                <div class="item-row">
+                                                    <div class="item-cell">{{tanggal}} {{jam}}</div>
+                                                </div>
+                                            </div>
+                                        </li>
+                                        <li class="item-content">
+                                            <div class="item-inner item-cell">
+                                                <div class="item-row">
+                                                    <div class="item-cell"><b>Durasi</b></div>
+                                                </div>
+                                                <div class="item-row">
+                                                    <div class="item-cell">{{durasiFormatter durasi}}</div>
+                                                </div>
+                                            </div>
+                                        </li>
+                                        <li class="item-content">
+                                            <div class="item-inner item-cell">
+                                                <div class="item-row">
+                                                    <div class="item-cell"><b>Daftar Meja</b></div>
+                                                </div>
+                                                <div class="item-row">
+                                                    <div class="item-cell">
+                                                        {{daftarMejaFormatter daftarMeja}}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </li>
+                                        <li class="item-content">
+                                            <div class="item-inner item-cell">
+                                                <div class="item-row">
+                                                    <div class="item-cell"><b>Total Pembayaran</b></div>
+                                                </div>
+                                                <div class="item-row">
+                                                    <div class="item-cell">
+                                                        {{formatRupiahHelper totalHarga}}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </li>
+                                        {{#js_if "this.status == 'Belum diupload'"}}
+                                        <li class="item-content">
+                                            <div class="item-inner display-flex justify-content-center">
+                                                <a href="#" class="button button-round button-outline color-white"
+                                                    @click="cancelPesanan"><i class="icon f7-icons">bin_xmark_fill</i>
+                                                    Cancel
+                                                    Reservasi</a>
+                                            </div>
+                                        </li>
+                                        <li class="item-content">
+                                            <div class="item-inner display-flex justify-content-center">
+                                                <a href="#" class="button button-round button-outline color-white"
+                                                    @click="uploadFile"><i class="icon f7-icons">cloud_upload_fill</i>
+                                                    Upload Bukti
+                                                    Pembayaran</a>
+                                            </div>
+                                        </li>
+                                        {{/js_if}}
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </li>
+                    {{/each}}
+                </ul>
+            </div>
+            {{/if}}
+        </div>
+
+        <form id="formBuktiPembayaran" method="POST" enctype="multipart/form-data">
+            <input type="text" name="id">
+            <input type="file" name="file" accept="image/png, image/jpeg, image/jpg" @change="kirimBuktiPembayaran">
+        </form>
+    </div>
+</template>
+<style>
+    .card-pesanan {
+        /* box-shadow: 0 8px 12px 0 rgba(0, 0, 0, 0.2); */
+        background: rgb(246, 96, 21);
+        background: linear-gradient(0deg, rgba(246, 96, 21, 1) 0%, rgba(252, 141, 36, 1) 100%);
+        color: white;
+    }
+
+    /* .card-pesanan:hover {
+        box-shadow: 0 12px 16px 0 rgba(0, 0, 0, 0.2);
+    } */
+
+
+    .card-pesanan .item-footer,
+    .card-pesanan .item-after {
+        color: white;
+    }
+</style>
+<script>
+    // script must return component object
+    return {
+        data: function () {
+            return {
+                loading: true
+            }
+        },
+        on: {
+            pageInit: function () {
+                app.on('accordionBeforeOpen', this.lihatPesanan);
+
+                $$('#page-pesanan').on('ptr:refresh', () => {
+                    this.getDaftarPesanan();
+                })
+            },
+            pageAfterIn: function () {
+                this.getDaftarPesanan();
+            }
+        },
+        methods: {
+            getDaftarPesanan: function () {
+                const self = this;
+
+                const send = {
+                    uid: localStorage.getItem('uid')
+                };
+
+                app.request.promise.get(`${URL}getDaftarPesanan`, send, 'json')
+                    .then(res => {
+                        const daftarPesanan = res.data;
+
+                        self.$setState({
+                            loading: false,
+                            daftarPesanan
+                        })
+
+                        app.ptr.done();
+                    })
+
+                app.emit('getTotalPesanan');
+            },
+            lihatPesanan: function (el) {
+                const {
+                    id,
+                    status
+                } = $$(el).dataset();
+
+                this.$setState({
+                    id
+                })
+
+                if (status == 'Expired') {
+                    app.toast.create({
+                        icon: '<i class="icon f7-icons" style="font-size:22px;">exclamationmark_circle</i>',
+                        text: 'Maaf, pesanan telah expired',
+                        closeTimeout: 2000,
+                    }).open()
+                    // } else {
+                    //     $$('input[name=id]').val(id);
+                }
+            },
+            uploadFile: function () {
+                $$('input[name=id]').val(this.id)
+                $$('input[name=file]').click();
+            },
+            cancelPesanan: function () {
+                const self = this
+                const id = this.id
+
+                app.dialog.confirm(
+                    `Pesanan anda untuk ID ${id} akan dibatalkan?`,
+                    'Informasi',
+                    () => {
+                        app.request.promise.post(`${URL}cancelPesanan`, {
+                            id
+                        }, 'json').then(res => {
+                            if (!res.data) return
+
+                            app.dialog.alert('Pesanan anda telah dibatalkan', 'Berhasil');
+
+                            app.accordion.close($$(`li[data-id=${id}]`))
+
+                            self.getDaftarPesanan();
+                            // emit global app event
+                            app.emit('refreshPage');
+                        })
+                    })
+            },
+            kirimBuktiPembayaran: function () {
+                const self = this;
+                app.dialog.confirm(
+                    'Pastikan file yang anda pilih telah sesuai, file tidak dapat diubah setelah diupload ',
+                    'Informasi',
+                    () => {
+                        const form = $$('#formBuktiPembayaran')[0];
+                        var formData = new FormData(form);
+
+                        app.dialog.preloader('Mengupload file...');
+
+                        app.request.promise({
+                            url: `${URL}uploadBuktiPembayaran`,
+                            type: 'POST',
+                            data: formData,
+                            dataType: 'json'
+                        }).then(res => {
+                            app.dialog.close();
+                            if (res.data[0]) {
+                                app.dialog.alert('File berhasil diupload', 'Berhasil');
+                                self.$setState(res.data[1]);
+
+                                app.accordion.close($$(`li[data-id=${self.id}]`))
+
+                                self.getDaftarPesanan();
+                                // emit global app event
+                                app.emit('refreshPage');
+
+                                $$('input[name=file]').val('');
+                            } else {
+                                app.dialog.alert(res.data[1], 'Gagal');
+                            }
+                        }).catch((err) => {
+                            app.dialog.close();
+                            app.dialog.alert('Tidak dapat terhubung ke server', 'Gagal');
+                            console.log(err);
+                        })
+
+                    },
+                    () => {
+                        $$('input[name=file]').val('');
+                    })
+            }
+        }
+    }
+</script>

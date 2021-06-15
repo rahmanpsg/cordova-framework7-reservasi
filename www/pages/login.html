@@ -1,0 +1,90 @@
+<template>
+    <div class="page login-screen-page" data-name="login">
+        <div class="page-content login-screen-content">
+            <div class="login-screen-title">
+                <p><img src="./assets/logo.jpg" width="200"></p>
+            </div>
+            <div class="list">
+                <ul>
+                    <li class="block">
+                        <a class="button button-fill button-round button-raised color-deeporange display-flex" href="#"
+                            @click="loginGoogle">
+                            <i class="icon f7-icons">logo_google</i>
+                            &nbsp; Masuk dengan Akun Google
+                        </a>
+                    </li>
+                    <li class="block">
+                        <a class="button button-fill button-round button-raised color-blue display-flex"
+                            href="/loginPhone/"><i class="icon f7-icons">phone</i>&nbsp; Masuk
+                            dengan Nomor Telpon</a>
+                    </li>
+                </ul>
+            </div>
+            <!-- <div class="block">
+                <div class="row">
+                    <a href="/customer/" data-transition="f7-circle" class="button">Skip</a>
+                </div>
+            </div> -->
+        </div>
+    </div>
+</template>
+<script>
+    // script must return component object
+    return {
+        methods: {
+            loginGoogle: function () {
+                const self = this;
+                const clientId = '744561150787-ap1dn3amgh4qhqfp71meqi7bp6ffjcdo.apps.googleusercontent.com'
+                FirebasePlugin.authenticateUserWithGoogle(clientId, function (credential) {
+                    app.preloader.show();
+
+                    self.signInWithCredential(credential);
+                });
+            },
+            signInWithCredential: function (credential) {
+                const self = this;
+                FirebasePlugin.signInWithCredential(credential, function () {
+                    console.log("Successfully signed in");
+                    FirebasePlugin.getCurrentUser(self.registrasiUser);
+                }, function (error) {
+                    console.error("Failed to sign in", error);
+                });
+            },
+            registrasiUser: function (user) {
+                FirebasePlugin.getToken((token) => {
+                    const dataUser = {
+                        uid: user.uid,
+                        nama: user.name,
+                        email: user.email,
+                        telp: user.phoneNumber,
+                        foto: user.photoUrl,
+                        token
+                    }
+
+                    app.request.promise.post(`${URL}registrasiUser`, dataUser,
+                            'json')
+                        .then(res => {
+                            app.preloader.hide();
+
+                            localStorage.setItem('uid', user.uid);
+                            // localStorage.setItem('foto', user.photoUrl);
+
+                            mainView.router.navigate('/customer/', {
+                                reloadAll: true
+                            });
+
+                            app.toast.create({
+                                icon: '<i class="icon f7-icons" style="font-size:22px;">checkmark_alt_circle</i>',
+                                text: `Selamat Datang ${user.name}`,
+                                closeTimeout: 2000,
+                            }).open()
+                        })
+                        .catch(err => {
+                            app.dialog.preloader('Tidak dapat terhubung ke server...');
+                            console.log(err);
+                        })
+                })
+            }
+        }
+    }
+</script>

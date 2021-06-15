@@ -1,0 +1,32 @@
+{
+  "project_info": {
+    "project_number": "744561150787",
+    "firebase_url": "https://reservasi-android.firebaseio.com",
+    "project_id": "reservasi-android",
+    "storage_bucket": "reservasi-android.appspot.com"
+  },
+  "client": [{
+    "client_info": {
+      "mobilesdk_app_id": "1:744561150787:android:e5f8e19a7d864815bdbdf6",
+      "android_client_info": {
+        "package_name": "com.cafe.reservasi"
+      }
+    },
+    "oauth_client": [{
+      "client_id": "744561150787-ap1dn3amgh4qhqfp71meqi7bp6ffjcdo.apps.googleusercontent.com",
+      "client_type": 3
+    }],
+    "api_key": [{
+      "current_key": "AIzaSyB_j9aedcCpP5n6QqiFvN8Dbcj4eFfEO4o"
+    }],
+    "services": {
+      "appinvite_service": {
+        "other_platform_oauth_client": [{
+          "client_id": "744561150787-ap1dn3amgh4qhqfp71meqi7bp6ffjcdo.apps.googleusercontent.com",
+          "client_type": 3
+        }]
+      }
+    }
+  }],
+  "configuration_version": "1"
+}

@@ -1,0 +1,267 @@
+<template>
+    <div class="page">
+        <div class="navbar no-shadow">
+            <div class="navbar-bg"></div>
+            <div class="navbar-inner">
+                <div class="left">
+                    <a class="link back">
+                        <i class="icon f7-icons">arrow_left</i>
+                    </a>
+                </div>
+                <div class="title">Profil</div>
+            </div>
+        </div>
+        <div class="page-content tab tab-active">
+            <div class="profil-card-header-pic">
+                <div style="background-image:url(./assets/profile-background.jpg)"
+                    class="card-header display-flex justify-content-center">
+                    <img src="{{foto}}" width="100px" height="100px" style="border-radius: 50%;"
+                        class="lazy lazy-fade-in">
+                </div>
+            </div>
+            <form id="formProfil">
+                <div class="list">
+                    <ul>
+                        <li class="item-content item-input">
+                            <div class="item-inner">
+                                <div class="item-title item-label">Nama</div>
+                                <div class="item-input-wrap">
+                                    <input type="text" name="nama" placeholder="Masukkan nama" required validate
+                                        data-error-message="Nama tidak boleh kosong" value="{{nama}}">
+                                    <span class="input-save-button" @click="simpanData"></span>
+                                </div>
+                            </div>
+                        </li>
+                        <li class="item-content item-input">
+                            <div class="item-inner">
+                                <div class="item-title item-label">Nomor Telpon</div>
+                                <div class="item-input-wrap">
+                                    <input type="text" name="telp" placeholder="Masukkan nomor telpon" value="{{telp}}">
+                                    {{#if emailIsVerified}}
+                                    <span class="input-save-button" @click="simpanData"></span>
+                                    {{/if}}
+                                </div>
+                            </div>
+                        </li>
+                        <li class="item-content item-input">
+                            <div class="item-inner">
+                                <div class="item-title item-label">Email</div>
+                                <div class="item-input-wrap">
+                                    <input type="email" name="email" placeholder="Masukkan email" value="{{email}}">
+                                    {{#unless emailIsVerified}}
+                                    <span class="input-save-button" @click="simpanData"></span>
+                                    {{/unless}}
+                                </div>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </form>
+            <div class="list">
+                <ul>
+                    <li>
+                        <a href="#" class="item-link item-content" @click="logout">
+                            <div class="item-media"><i class="icon f7-icons">power</i></div>
+                            <div class="item-inner">
+                                <div class="item-title">Logout</div>
+                            </div>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+</template>
+<style>
+    .profil-card-header-pic .card-header {
+        height: 30vw;
+        background-size: cover;
+        background-position: center;
+        color: white;
+        font-size: 24px;
+        font-weight: bold;
+    }
+
+    .input-save-button {
+        opacity: 0;
+        pointer-events: none;
+        visibility: hidden;
+        transition-duration: 100ms;
+        position: absolute;
+        top: 50%;
+        border: none;
+        padding: 0;
+        margin: 0;
+        outline: 0;
+        z-index: 1;
+        cursor: pointer;
+        background: none;
+        width: var(--f7-input-clear-button-size);
+        height: var(--f7-input-clear-button-size);
+        margin-top: calc(-1 * var(--f7-input-clear-button-size) / 2);
+        color: var(--f7-input-clear-button-color);
+        right: 0;
+    }
+
+    .input-save-button:after {
+        font-family: 'Framework7 Icons';
+        font-weight: normal;
+        font-style: normal;
+        line-height: 1;
+        letter-spacing: normal;
+        text-transform: none;
+        white-space: nowrap;
+        word-wrap: normal;
+        direction: ltr;
+        -webkit-font-smoothing: antialiased;
+        text-rendering: optimizeLegibility;
+        -moz-osx-font-smoothing: grayscale;
+        font-feature-settings: "liga";
+        text-align: center;
+        display: block;
+        width: 100%;
+        height: 100%;
+        font-size: 30px;
+    }
+
+    .input-save-button:before {
+        position: absolute;
+        content: '';
+        left: 50%;
+        top: 50%;
+    }
+
+    .item-input-wrap .input-save-button {
+        top: 0.5px;
+    }
+
+    .input-save-button.active-state {
+        opacity: 0.75 !important;
+    }
+
+    .input-with-value~.input-save-button,
+    .item-input-with-value .input-save-button,
+    .input-with-value .input-save-button {
+        opacity: 1;
+        pointer-events: auto;
+        visibility: visible;
+    }
+
+    .input-outline .input-save-button,
+    .item-input-outline .input-save-button {
+        right: 8px;
+    }
+
+    .md .input-save-button:after {
+        color: rgb(246, 96, 21);
+        font-size: 35px;
+        content: 'pencil_circle_fill';
+        line-height: 1.2;
+        top: 1;
+    }
+
+    .md .input-save-button:before {
+        width: 48px;
+        height: 48px;
+        margin-left: -24px;
+        margin-top: -24px;
+    }
+</style>
+<script>
+    // script must return component object
+    return {
+        data: function () {
+            return {
+                uid: localStorage.getItem('uid'),
+                dataUser: []
+            };
+        },
+        on: {
+            pageInit: function () {
+                let self = this;
+                this.loadProfil()
+            }
+        },
+        methods: {
+            loadProfil: function () {
+                FirebasePlugin.getCurrentUser(user => {
+                    this.$setState({
+                        emailIsVerified: user.emailIsVerified
+                    })
+                    if (!user.emailIsVerified) {
+                        $$('input[name=telp]').attr('disabled', true)
+                    } else {
+                        $$('input[name=email]').attr('disabled', true)
+                    }
+                });
+
+                app.request.promise.get(`${URL}getProfil`, {
+                    uid: this.uid
+                }, 'json').then(res => {
+                    console.log(res.data);
+                    this.$setState(res.data)
+                })
+            },
+            logout: function () {
+                app.dialog.confirm('Anda yakin untuk logout?', 'Informasi', () => {
+                    app.preloader.show();
+                    FirebasePlugin.signOutUser(function () {
+                        FirebasePlugin.unregister();
+
+                        mainView.router.navigate('/login/', {
+                            reloadAll: true
+                        });
+                        app.preloader.hide();
+
+                        app.toast.create({
+                            icon: '<i class="icon f7-icons" style="font-size:22px;">checkmark_alt_circle</i>',
+                            text: `Anda berhasil logout`,
+                            closeTimeout: 2000,
+                        }).open()
+
+                        localStorage.clear();
+                    });
+                })
+            },
+            simpanData: function () {
+                app.dialog.confirm(`Data akan diubah?`, 'Informasi', () => {
+                    const data = app.form.convertToData('#formProfil');
+                    data['uid'] = this.uid
+
+                    app.preloader.show();
+                    app.request.promise.post(`${URL}registrasiUser`, data, 'json')
+                        .then(res => {
+                            FirebasePlugin.updateUserProfile({
+                                name: data.nama,
+                            });
+
+                            FirebasePlugin.updateUserEmail(data.email);
+
+                            app.preloader.hide();
+
+                            if (res.data[0]) {
+                                app.toast.create({
+                                    icon: '<i class="icon f7-icons" style="font-size:22px;">checkmark_alt_circle</i>',
+                                    text: `Data berhasil diubah`,
+                                    position: 'center',
+                                    closeTimeout: 2000,
+                                }).open()
+
+                                localStorage.setItem('user', $$('input[name=nama]').val())
+                                localStorage.setItem('telp', $$('input[name=telp]').val())
+                            } else {
+                                app.toast.create({
+                                    icon: '<i class="icon f7-icons" style="font-size:22px;">exclamationmark_circle</i>',
+                                    text: `Data gagal diubah`,
+                                    position: 'center',
+                                    closeTimeout: 2000,
+                                }).open()
+                            }
+                        })
+                })
+            }
+        }
+    }
+</script>

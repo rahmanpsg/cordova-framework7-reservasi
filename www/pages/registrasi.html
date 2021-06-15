@@ -1,0 +1,125 @@
+<template>
+    <div class="page">
+        <div class="navbar navbar-transparent">
+            <div class="navbar-bg"></div>
+            <div class="navbar-inner">
+                <div class="left">
+                    <a class="link back">
+                        <i class="icon f7-icons">arrow_left</i>
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="page-content">
+            <div class="login-screen-title">
+                <p><img src="./assets/logo.jpg" width="200"></p>
+            </div>
+
+            <form id="formProfil" enctype="multipart/form-data" onsubmit="return false;" @submit="registrasi">
+                <div class="firebaseui-card-header">
+                    <h1 class="firebaseui-title">Silahkan lengkapi profil anda</h1>
+                </div>
+                <div class="firebaseui-card-content">
+                    <div class="list no-hairlines-md">
+                        <ul>
+                            <li class="item-content item-input">
+                                <div class="item-inner">
+                                    <div class="item-title item-label">Nama</div>
+                                    <div class="item-input-wrap">
+                                        <input type="text" name="nama" placeholder="Masukkan nama anda" required
+                                            validate>
+                                        <span class="input-clear-button"></span>
+                                    </div>
+                                </div>
+                            </li>
+                            <li class="item-content item-input">
+                                <div class="item-inner">
+                                    <div class="item-title item-label">Email</div>
+                                    <div class="item-input-wrap">
+                                        <input type="email" name="email" placeholder="Masukkan email anda" required
+                                            validate>
+                                        <span class="input-clear-button"></span>
+                                    </div>
+                                </div>
+                            </li>
+                            <li>
+                                <div class="item-link">
+                                    <div class="item-content item-input">
+                                        <div class="item-inner">
+                                            <div class="item-title item-label">Foto</div>
+                                            <div class="item-input-wrap">
+                                                <input type="file" name="file" accept="image/png, image/jpeg" required
+                                                    validate data-error-message="File tidak boleh kosong">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="firebaseui-card-actions">
+                    <div class="firebaseui-form-actions"><button type="submit"
+                            class="button button-fill">Lanjutkan</button></div>
+                </div>
+            </form>
+
+        </div>
+    </div>
+</template>
+<style>
+    .firebaseui-textfield.mdl-textfield .firebaseui-input {
+        border-color: rgba(0, 0, 0, 0.12);
+    }
+</style>
+<script>
+    return {
+        methods: {
+            registrasi: function () {
+                FirebasePlugin.getCurrentUser(user => {
+                    FirebasePlugin.getToken((token) => {
+                        let formData = new FormData($$('#formProfil')[0]);
+                        formData.append('uid', user.uid);
+                        formData.append('telp', user.phoneNumber);
+                        formData.append('token', token);
+
+                        app.preloader.show()
+                        app.request.promise.post(`${URL}registrasiUser`, formData,
+                                'json')
+                            .then(res => {
+
+                                const data = res.data[1];
+
+                                FirebasePlugin.updateUserProfile({
+                                    name: data.nama,
+                                    photoUri: data.foto
+                                });
+
+                                // FirebasePlugin.updateUserEmail(dataUser.email);
+
+                                console.log(data);
+                                app.preloader.hide();
+
+                                localStorage.setItem('uid', user.uid);
+                                localStorage.setItem('foto', data.foto);
+
+                                mainView.router.navigate('/customer/', {
+                                    reloadAll: true
+                                });
+
+                                app.toast.create({
+                                    icon: '<i class="icon f7-icons" style="font-size:22px;">checkmark_alt_circle</i>',
+                                    text: `Selamat Datang ${user.name}`,
+                                    closeTimeout: 2000,
+                                }).open()
+                            })
+                            .catch(err => {
+                                app.dialog.preloader('Tidak dapat terhubung ke server...');
+                                console.log(err);
+                            })
+                    })
+                });
+            }
+        }
+    }
+</script>

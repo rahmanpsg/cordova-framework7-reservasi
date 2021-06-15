@@ -1,0 +1,202 @@
+<template>
+    <div class="page">
+        <div class="navbar navbar-transparent">
+            <div class="navbar-bg"></div>
+            <div class="navbar-inner">
+                <div class="left">
+                    <a class="link back">
+                        <i class="icon f7-icons">arrow_left</i>
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="page-content">
+            <div class="login-screen-title">
+                <p><img src="./assets/logo.jpg" width="200"></p>
+            </div>
+
+            <form onsubmit="return false;" @submit="verifyPhoneNumber">
+                <div class="firebaseui-card-header">
+                    <h1 class="firebaseui-title">Masukkan nomor telepon Anda</h1>
+                    <span class="progressbar-infinite"></span>
+                </div>
+                <div class="firebaseui-card-content">
+                    <div class="list">
+                        <ul>
+                            {{#if beforeVerify}}
+                            <li class="item-content item-input item-input-with-info">
+                                <div class="item-media">
+                                    <span
+                                        class="firebaseui-flag firebaseui-country-selector-flag firebaseui-id-country-selector-flag firebaseui-flag-ID"></span><span
+                                        class="firebaseui-id-country-selector-code">&lrm;+62</span>
+                                </div>
+                                <div class="item-inner">
+                                    <div class="item-title item-floating-label">Nomor Telpon</div>
+                                    <div class="item-input-wrap">
+                                        <input type="number" name="phoneNumber" required validate>
+                                        <span class="input-clear-button"></span>
+                                    </div>
+                                </div>
+                            </li>
+                            {{else}}
+                            <li class="item-content item-input item-input-with-info">
+                                <div class="item-inner">
+                                    <div class="item-title item-floating-label">Masukkan 6 Kode Verifikasi</div>
+                                    <div class="item-input-wrap">
+                                        <input type="number" name="kode" required validate>
+                                        <span class="input-clear-button"></span>
+                                    </div>
+                                </div>
+                            </li>
+                            {{/if}}
+                        </ul>
+                    </div>
+                </div>
+                <div class="firebaseui-card-actions">
+                    <div class="firebaseui-form-actions"><button type="submit"
+                            class="button button-fill">Verifikasi</button></div>
+                </div>
+                <div class="firebaseui-card-footer">
+                    <p class="firebaseui-tos firebaseui-phone-tos">Dengan mengetuk Verifikasi, SMS mungkin akan dikirim.
+                        Mungkin dikenakan biaya pesan &amp; data.</p>
+                </div>
+            </form>
+
+        </div>
+    </div>
+</template>
+<style>
+    .firebaseui-textfield.mdl-textfield .firebaseui-input {
+        border-color: rgba(0, 0, 0, 0.12);
+    }
+</style>
+<script>
+    return {
+        data: function () {
+            return {
+                beforeVerify: true
+            }
+        },
+        on: {
+            pageInit: function () {
+                $$('input[name=phoneNumber]').focus()
+                $$('.progressbar-infinite').hide()
+            }
+        },
+        methods: {
+            verifyPhoneNumber: function () {
+                const self = this
+
+                const timeOutDuration = 60;
+                let awaitingSms = false;
+
+                if (!this.beforeVerify) {
+                    awaitingSms = false;
+                    this.credential.code = $$('input[name=kode]').val();
+                    this.signInWithCredential(this.credential);
+                    return
+                }
+
+                const inputValue = $$('input[name=phoneNumber]').val()
+
+                let number
+
+                if (inputValue[0] == 0) {
+                    number = inputValue.substring(1)
+                } else {
+                    number = inputValue
+                }
+
+                number = `+62${number}`
+
+                $$('.progressbar-infinite').show()
+
+                FirebasePlugin.verifyPhoneNumber(function (credential) {
+                    $$('.progressbar-infinite').hide()
+                    self.$setState({
+                        beforeVerify: false,
+                        credential
+                    })
+
+                    if (credential.instantVerification) {
+                        if (awaitingSms) {
+                            awaitingSms = false;
+                            $$('.progressbar-infinite').show()
+                        }
+                        console.log('instant ', credential);
+                        self.signInWithCredential(credential);
+                    } else {
+                        awaitingSms = true;
+
+                        $$('input[name=kode]').focus()
+                        console.log(credential);
+                    }
+                }, function (error) {
+                    console.error("Failed to verify phone number: " + JSON.stringify(error));
+                }, number, timeOutDuration, '123456');
+            },
+            signInWithCredential: function (credential) {
+                const self = this;
+                FirebasePlugin.signInWithCredential(credential, function () {
+                    console.log("Successfully signed in");
+                    FirebasePlugin.getCurrentUser(self.registrasiUser);
+                }, function (error) {
+                    app.toast.create({
+                        icon: '<i class="icon f7-icons" style="font-size:22px;">exclamationmark_bubble_fill</i>',
+                        text: `Failed to sign in", ${error}`,
+                        closeTimeout: 2000,
+                    }).open()
+                    console.error("Failed to sign in", error);
+                });
+            },
+            registrasiUser: function (user) {
+                const self = this
+
+                if (!user.nama) {
+                    mainView.router.navigate('/registrasi/');
+                    return
+                }
+
+                FirebasePlugin.getToken((token) => {
+                    const dataUser = {
+                        uid: user.uid,
+                        nama: user.name,
+                        email: user.email,
+                        telp: user.phoneNumber,
+                        foto: user.photoUrl,
+                        token
+                    }
+
+                    console.log(dataUser);
+
+                    app.request.promise.post(`${URL}registrasiUser`, dataUser,
+                            'json')
+                        .then(res => {
+                            const data = res.data[1];
+
+                            console.log(data);
+                            app.preloader.hide();
+
+                            localStorage.setItem('uid', user.uid);
+                            // localStorage.setItem('foto', user.photoUrl);
+
+                            mainView.router.navigate('/customer/', {
+                                reloadAll: true
+                            });
+
+                            app.toast.create({
+                                icon: '<i class="icon f7-icons" style="font-size:22px;">checkmark_alt_circle</i>',
+                                text: `Selamat Datang ${user.name}`,
+                                closeTimeout: 2000,
+                            }).open()
+                        })
+                        .catch(err => {
+                            app.dialog.preloader('Tidak dapat terhubung ke server...');
+                            console.log(err);
+                        })
+                })
+            }
+
+        }
+    }
+</script>

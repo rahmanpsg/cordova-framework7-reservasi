@@ -1,0 +1,172 @@
+<template>
+    <div class="page">
+        <div class="page-content" style="background-color:rgb(252, 141, 36);">
+            <div class="block">
+                <div class="block block-title-large text-color-white">
+                    Selamat {{user}}, Pesanan kamu telah berhasil dibuat!
+                </div>
+                <div class="block">
+                    <div class="text-color-white">Selesaikan pembayaran sebelum</div>
+                    <div class="block-title-medium text-color-white">
+                        {{waktu}}
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-content">
+                        <div class="list">
+                            <ul>
+                                <li>
+                                    <div class="item-inner">
+                                        <div class="block item-title">
+                                            ID Pemesanan
+                                            <p><b>{{id}}</b></p>
+                                        </div>
+                                    </div>
+                                </li>
+                                <li class="media-list">
+                                    <div class="item-inner">
+                                        <div class="item-title display-flex justify-content-center">
+                                            <img src="./assets/bca.png" width="50px">
+                                        </div>
+                                        <div class="item-subtitle text-align-center">
+                                            {{#dataBank}}
+                                            <p><b>{{norek}}</b></p>
+                                            a/n {{nama}}
+                                            {{/dataBank}}
+                                        </div>
+                                    </div>
+                                </li>
+                                <li class="accordion-item">
+                                    <a href="#" class="item-content item-link">
+                                        <div class="item-inner">
+                                            <div class="item-title">Total Transfer</div>
+                                            <div class="item-after text-color-black">
+                                                <b>{{formatRupiahHelper totalTransfer}}</b></div>
+                                        </div>
+                                    </a>
+                                    <div class="accordion-item-content">
+                                        <div class="block">
+                                            <div class="list no-hairlines">
+                                                <ul>
+                                                    {{#each daftarMeja}}
+                                                    <li class="item-content">
+                                                        <div class="item-inner">
+                                                            <div class="item-title">Meja {{nomor}}</div>
+                                                            <div class="item-after text-color-black">
+                                                                <b>{{formatRupiahHelper harga}}</b>
+                                                            </div>
+                                                        </div>
+                                                    </li>
+                                                    {{/each}}
+                                                    <li class="item-content">
+                                                        <div class="item-inner">
+                                                            <div class="item-title">Total Pembayaran</div>
+                                                            <div class="item-after text-color-black">
+                                                                <b>{{formatRupiahHelper totalHarga}}</b>
+                                                            </div>
+                                                        </div>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="block text-color-white"><i class="icon f7-icons"
+                        style="font-size: 20px;">exclamationmark_circle</i> Harap transfer
+                    sesuai dengan total transfer, dan segera upload bukti pembayaran</div>
+            </div>
+        </div>
+        <div style="position:absolute;bottom:0px;width:100%;">
+            <div class="block">
+                <a class="button button-fill button-round button-raised color-white text-color-deeporange
+                                                        display-flex" @click="beranda">Kembali ke Beranda</a>
+            </div>
+        </div>
+    </div>
+</template>
+<script>
+    // script must return component object
+    return {
+        on: {
+            pageInit: function () {
+                app.statusbar.setBackgroundColor('#fc8d24')
+                this.$setState(this.$route.params);
+                this.waktuInterval;
+                this.getProfil();
+                this.getDataPembayaran();
+            },
+            pageBeforeRemove: function () {
+                app.statusbar.setBackgroundColor('#fa702a')
+                clearInterval(this.waktuInterval);
+                app.emit('refreshPage');
+                app.emit('getTotalPesanan');
+            }
+        },
+        methods: {
+            getProfil: function () {
+                FirebasePlugin.getCurrentUser(user => {
+                    this.$setState({
+                        user: user.name
+                    })
+                }, function (error) {
+                    console.error("Failed to get current user data: " + error);
+                });
+            },
+            getDataPembayaran: function () {
+                const self = this;
+
+                app.request.promise.get(`${URL}getDataPembayaran`, {
+                    id: this.id
+                }, 'json').then(res => {
+
+                    self.$setState({
+                        ...res.data.order,
+                        daftarMeja: res.data.meja,
+                        dataBank: res.data.bank
+                    })
+
+                    self.hitungWaktu()
+                })
+            },
+            hitungWaktu: function () {
+                const self = this;
+
+                let countDownDate = new Date(this.waktuBerakhir);
+
+                this.waktuInterval = setInterval(function () {
+
+                    let now = new Date().getTime();
+
+                    let distance = countDownDate - now;
+
+                    let hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                    let minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                    let seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+                    let waktu = `${hours > 0 ? hours + ' jam' : ''} ${minutes} menit ${seconds} detik`;
+
+                    self.$setState({
+                        waktu
+                    })
+
+                    if (distance < 0) {
+                        clearInterval(this.waktuInterval);
+
+                        self.$setState({
+                            waktu: 'Expired'
+                        })
+                    }
+                }, 1000);
+            },
+            beranda: function () {
+                mainView.router.back('/customer/', {
+                    force: true
+                });
+            }
+        }
+    }
+</script>

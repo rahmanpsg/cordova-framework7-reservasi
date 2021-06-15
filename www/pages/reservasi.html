@@ -1,0 +1,406 @@
+<template>
+    <div class="page">
+        <div class="navbar">
+            <div class="navbar-bg"></div>
+            <div class="navbar-inner">
+                <div class="left"><a class="back"><i class="icon f7-icons">chevron_left</i> Kembali</a></div>
+                <div class="title">Daftar Meja</div>
+                <div class="subnavbar">
+                    <div class="subnavbar-inner">
+                        <div class="segmented segmented-raised">
+                            <a class="button tab-link tab-link-active" href="#lantai1">Lantai 1</a>
+                            <a class="button tab-link" href="#lantai2">Lantai 2</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="page-content hide-navbar-on-scroll">
+            <div class="list">
+                <ul>
+                    <div class="block">
+                        <li><b>Tanggal</b> : {{tanggal}}</li>
+                        <li><b>Jam</b> : {{jam}}</li>
+                        <li><b>Durasi</b> : {{durasiFormatter durasi}}</li>
+                    </div>
+                </ul>
+            </div>
+            <div class="block-title">Silahkan pilih meja yang ingin anda pesan</div>
+            <div class="block">
+                <div class="chip color-deeporange">
+                    <div class="chip-label">Tersedia</div>
+                </div>
+                <div class="chip color-green">
+                    <div class="chip-label">Sudah dipesan</div>
+                </div>
+            </div>
+            <div class="tabs">
+                <div class="tab tab-active" id="lantai1">
+                    <div class="card">
+                        <div class="card-content display-flex justify-content-center">
+                            <canvas id="canvas" width="auto" height="812px"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="tab" id="lantai2">
+                    <div class="card">
+                        <div class="card-content display-flex justify-content-center">
+                            <canvas id="canvas2" width="auto" height="812px"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {{#js_if "this.totalHarga > 0"}}
+        <div id="fab-order" class="fab fab-extended fab-right-bottom color-deeporange">
+            <a href="#" @click="lihatDaftarOrder">
+                <i class="icon f7-icons">cart_fill
+                    {{#if daftarMeja}}
+                    <span class="badge color-orange"><b style="font-size: 12px;">{{daftarMeja.size}}</b></span>
+                    {{/if}}
+                </i>
+            </a>
+        </div>
+        {{/js_if}}
+
+        <!-- Swipe to step sheet -->
+        <div class="sheet-modal sheet-order" style="height:auto; --f7-sheet-bg-color: #fff;">
+            <div class="sheet-modal-inner">
+                <div class="sheet-modal-swipe-step">
+                    <div class="display-flex padding justify-content-space-between align-items-center">
+                        <div style="font-size: 18px"><b>Total:</b></div>
+                        <div style="font-size: 22px"><b>{{formatRupiahHelper totalHarga}}</b></div>
+                    </div>
+                    <div class="padding-horizontal padding-bottom">
+
+                        {{#js_if "this.totalHarga > 0"}}
+                        <a class="button button-fill button-round button-raised color-deeporange"
+                            @click="savePembayaran">Lanjutkan
+                            Pembayaran</a>
+                        {{else}}
+                        <a class="button button-fill button-round button-raised color-gray">Lanjutkan
+                            Pembayaran</a>
+                        {{/js_if}}
+                        <div class="margin-top text-align-center">Geser ke atas untuk melihat detail</div>
+                    </div>
+                </div>
+                <div class="block-title block-title-medium margin-top">Pesanan Anda:</div>
+                <div class="list no-hairlines">
+                    <ul>
+                        {{#if daftarMeja}}
+                        {{daftarMejaHelper daftarMeja}}
+                        {{/if}}
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</template>
+<style>
+    .tab-link-active {
+        background: rgb(255, 163, 116);
+    }
+</style>
+<script>
+    // script must return component object
+    return {
+        data: function () {
+            return {
+                totalHarga: 0,
+                daftarMeja: new Set()
+            };
+        },
+        on: {
+            pageBeforeIn: function () {
+                app.preloader.show()
+            },
+            pageAfterIn: function () {
+                this.loadObjects()
+                app.preloader.hide()
+            },
+            pageInit: function () {
+                let self = this;
+
+                this.$setState(this.$route.params)
+
+                this.grid = 20
+                this.backgroundColor = '#f8f8f8'
+                this.lineStroke = '#ebebeb'
+                this.tableFill = '#ff6b22';
+                this.tableFillReserv = '#4cd964';
+                this.tableStroke = '#694d23'
+                this.tableSelected = '#000'
+                this.tableShadow = 'rgba(0, 0, 0, 0.4) 3px 3px 7px'
+                this.chairFill = 'rgba(208, 99, 59, 1)'
+                this.chairStroke = '#32230b'
+                this.chairShadow = 'rgba(0, 0, 0, 0.4) 3px 3px 7px'
+
+                // Create swipe-to-step Sheet
+                app.sheet.create({
+                    el: '.sheet-order',
+                    swipeToClose: true,
+                    swipeToStep: true,
+                    backdrop: true,
+                });
+            }
+        },
+        methods: {
+            initCanvas: function (canvas) {
+                const self = this;
+
+                canvas.backgroundColor = this.backgroundColor
+
+                canvas.observe('object:selected', function (e) {
+                    const {
+                        number,
+                        harga,
+                        reserved
+                    } = e.target;
+
+                    if (reserved) {
+                        app.toast.create({
+                            icon: '<i class="icon f7-icons" style="font-size:22px;">exclamationmark_circle</i>',
+                            text: 'Maaf, meja telah di reservasi',
+                            closeTimeout: 2000,
+                        }).open()
+                    } else {
+                        const newOrder = JSON.stringify({
+                            number,
+                            harga
+                        });
+
+                        const daftarMeja = self.daftarMeja
+
+                        let totalHarga = parseInt(self.totalHarga)
+
+                        if (!daftarMeja.has(newOrder)) {
+                            daftarMeja.add(newOrder);
+
+                            totalHarga += parseInt(harga ? harga : 0);
+                        }
+
+                        self.$setState({
+                            daftarMeja,
+                            totalHarga
+                        })
+                    }
+                })
+            },
+            addChair: function (canvas, left, top, width, height) {
+                const o = new fabric.Rect({
+                    left,
+                    top,
+                    width,
+                    height,
+                    fill: this.chairFill,
+                    stroke: this.chairStroke,
+                    strokeWidth: 1,
+                    shadow: this.chairShadow,
+                    originX: 'left',
+                    originY: 'top',
+                    centeredRotation: true,
+                    snapAngle: 45,
+                    selectable: false,
+                    type: 'chair',
+                    id: app.utils.id('xxxx-xxxx-xxxx-')
+                });
+                canvas.add(o)
+                return o
+            },
+            addRect: function (canvas, reserved, nomor, harga, left, top, width, height, angle = 0) {
+                const id = app.utils.id('xxxx-xxxx-xxxx-')
+                const o = new fabric.Rect({
+                    width: width,
+                    height: height,
+                    fill: (!reserved ? this.tableFill : this.tableFillReserv),
+                    stroke: this.tableStroke,
+                    strokeWidth: 2,
+                    shadow: this.tableShadow,
+                    originX: 'center',
+                    originY: 'center',
+                    centeredRotation: true,
+                    snapAngle: 45,
+                    selectable: false
+                })
+
+                o.set('angle', angle);
+
+                const t = new fabric.IText(nomor.toString(), {
+                    fontFamily: 'Calibri',
+                    fontSize: 14,
+                    fill: '#fff',
+                    textAlign: 'center',
+                    originX: 'center',
+                    originY: 'center'
+                })
+                const g = new fabric.Group([o, t], {
+                    left: left,
+                    top: top,
+                    centeredRotation: true,
+                    snapAngle: 45,
+                    selectable: true,
+                    type: 'table',
+                    id: id,
+                    number: nomor,
+                    harga: harga,
+                    reserved,
+                    hasControls: false,
+                    lockMovementX: true,
+                    lockMovementY: true,
+                    borderColor: this.tableSelected,
+                    borderScaleFactor: 2.5
+                })
+
+                canvas.add(g)
+                return g
+            },
+            sendLinesToBack: function (canvas) {
+                canvas.getObjects().map(o => {
+                    if (o.type === 'line') {
+                        canvas.sendToBack(o)
+                    }
+                })
+            },
+            loadObjects: function () {
+                let lantai1 = new fabric.Canvas('canvas')
+                let lantai2 = new fabric.Canvas('canvas2')
+
+                this.initCanvas(lantai1)
+                this.initCanvas(lantai2)
+
+                app.request.promise({
+                    url: `${URL}loadObjects`,
+                    type: 'POST',
+                    dataType: 'json',
+                    data: {
+                        tanggal: this.tanggal,
+                        jam: this.jam,
+                        durasi: this.durasi
+                    }
+                }).then(res => {
+                    const data = res.data;
+
+                    for (let item of data.kursi) {
+                        const lantai = item.lantai;
+                        const {
+                            left,
+                            top,
+                            width,
+                            height
+                        } = JSON.parse(item.attribut);
+
+                        this.addChair(lantai == 1 ? lantai1 : lantai2, left, top, width, height)
+                    }
+
+                    //Periksa Meja Reserved
+                    let mejaReserved = [];
+                    for (let item of data.dataReserved) {
+                        for (let m of item.meja) {
+                            mejaReserved.push(m);
+                        }
+                    }
+
+                    for (let item of data.meja) {
+                        const {
+                            lantai,
+                            nomor,
+                            harga
+                        } = item;
+
+                        const {
+                            left,
+                            top,
+                            width,
+                            height,
+                            angle
+                        } = JSON.parse(item.attribut);
+
+                        const reserved = mejaReserved.includes(nomor);
+
+                        this.addRect(lantai == 1 ? lantai1 : lantai2, reserved, nomor, harga, left,
+                            top,
+                            width,
+                            height,
+                            angle)
+                    }
+
+                    lantai1.selection = false
+                    lantai1.hoverCursor = 'move'
+                    lantai2.selection = false
+                    lantai2.hoverCursor = 'move'
+                    // canvas.discardActiveObject()
+                })
+            },
+            lihatDaftarOrder: () => {
+                app.sheet.open('.sheet-order');
+
+                app.request.promise(`${URL}`)
+            },
+            hapusOrderMeja: function (number, harga) {
+                const daftarMeja = this.daftarMeja;
+
+                const order = JSON.stringify({
+                    number: String(number),
+                    harga: harga ? String(harga) : null
+                })
+
+                daftarMeja.delete(order);
+
+                const totalHarga = parseInt(this.totalHarga) - parseInt(harga ?
+                    harga : 0);
+
+                this.$setState({
+                    daftarMeja,
+                    totalHarga
+                })
+            },
+            savePembayaran: function () {
+                const uid = localStorage.getItem('uid'),
+                    id = app.utils.id('ORD-xxxx-xxxx-').toUpperCase() + app.utils.id('xxx', '0123456789'),
+                    totalHarga = this.totalHarga;
+
+                let daftarMeja = [];
+                for (let items of this.daftarMeja) {
+                    const {
+                        number
+                    } = JSON.parse(items);
+
+                    daftarMeja.push(number)
+                }
+
+                const send = {
+                    uid,
+                    id,
+                    daftarMeja: JSON.stringify(daftarMeja),
+                    totalHarga,
+                    ...this.$route.params
+                }
+
+                app.preloader.show();
+
+                app.request.promise.post(`${URL}simpanPembayaran`, send, 'json')
+                    .then(res => {
+                        app.preloader.hide();
+
+                        if (res.data) {
+                            app.sheet.close();
+
+                            mainView.router.navigate({
+                                name: 'pembayaran',
+                                params: {
+                                    id,
+                                }
+                            });
+                        } else {
+                            app.dialog.alert('Data pembayaran gagal disimpan', 'informasi');
+                        }
+                    })
+                    .catch(err => {
+                        app.dialog.preloader('Tidak dapat terhubung ke server...');
+                    })
+            }
+        }
+    }
+</script>
